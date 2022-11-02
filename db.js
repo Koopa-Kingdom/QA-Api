@@ -9,9 +9,49 @@ const pool = new Pool({
   port: process.env.PORT
 })
 
-pool.query('SELECT * FROM answers WHERE answers.question_id = 28', (err, res) => {
-  if (err) {
-    console.log(err)
-  }
-  console.log(res.rows)
-})
+const test = 1
+const results = {}
+pool.query(`SELECT * FROM questions WHERE questions.product_id = ${test}`)
+  .then((res) => {
+    res.rows.forEach((item) => {
+      results[item.id] = item
+    })
+    return res.rows
+  })
+  .then((item) => {
+    item.forEach((question) => {
+      pool.query(`select * FROM answers where answers.question_id = ${question.id}`)
+      .then((answer) => {
+        results[question.id].answers = answer.rows
+        return answer.rows
+      })
+      .then((row) => {
+        row.forEach((rowItem) => {
+          pool.query(`select * FROM answers_photos where answers_photos.answer_id = ${rowItem.id}`)
+          .then((photo) => {
+            for (let key in results) {
+              if (results[key].answers && photo.rows) {
+                console.log(photo.rows)
+                console.log(results[key].answers)
+                results[key].answers.forEach((answer) => {
+                    photo.rows.forEach((row) => {
+                    if (row.answer_id === answer.id) {
+                      answer.photo = photo.rows
+                      // console.log('row-id', row.answer_id)
+                      // console.log('answer-id', answer.id)
+                      // console.log('photo row', photo.rows)
+                      // console.log('answer ', answer)
+                    }
+                  })
+                })
+              }
+            }
+          })
+        })
+      })
+      .then(() => {
+        // console.log(results[5].answers)
+      })
+    })
+  })
+

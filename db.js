@@ -122,7 +122,7 @@ left join (
 // findQuestions(5)
 // findAnswers(5)
 // id,product_id,body,date_written,asker_name,asker_email,reported,helpful
-function addQuestion(body, name, email, productId) {
+function addQuestion({body, name, email, productId}) {
   pool.query(`insert into questions(question_body, date_written, asker_name, asker_email, product_id, reported, question_helpfulness)
   values('${body}', '${Date.now()}', '${name}', '${email}', '${productId}', '0', '0')`)
   .then((res) => {
@@ -133,7 +133,7 @@ function addQuestion(body, name, email, productId) {
 
 // addQuestion('test', 'test', 'test@gmail.com', 1)
 
-function addAnswer(qId, body, name, email, photos) {
+function addAnswer({qId, body, name, email, photos}) {
   pool.query(`insert into answers(question_id, answer_body, date_written, answerer_name, answerer_email, reported, helpfulness) values ('${qId}', '${body}', '${Date.now()}', '${name}', '${email}', '0', '0') RETURNING id`)
   .then((res) => {
     photos.forEach((url) => {
@@ -147,8 +147,41 @@ function addAnswer(qId, body, name, email, photos) {
   })
 }
 
-// addAnswer(1, 'test', 'test', 'test@gmail.com', ['test.com', 'test.com'])
+function questionReport(qId) {
+  pool.query(`UPDATE questions set reported = 1 where questions.id = ${qId} returning id`)
+  .then((res) => {
+    console.log(`question ${res.rows[0].id} reported successfully` )
+    pool.end()
+  })
+}
+function questionHelpful(qId) {
+  pool.query(`UPDATE questions set question_helpfulness = question_helpfulness + 1 where questions.id = ${qId} returning id`)
+  .then((res) => {
+    console.log(`question ${res.rows[0].id} helpfulness added` )
+    pool.end()
+  })
+}
 
+function answerReport(aId) {
+  pool.query(`UPDATE answers set reported = 1 where answers.id = ${aId} returning id`)
+  .then((res) => {
+    console.log(`answer ${res.rows[0].id} reported successfully` )
+    pool.end()
+  })
+}
+function questionHelpful(aId) {
+  pool.query(`UPDATE answers set helpfulness = helpfulness + 1 where answers.id = ${aId} returning id`)
+  .then((res) => {
+    console.log(`answer ${res.rows[0].id} helpfulness added` )
+    pool.end()
+  })
+}
+
+// addAnswer(1, 'test', 'test', 'test@gmail.com', ['test.com', 'test.com'])
+questionReport(5)
+questionHelpful(5)
+answerReport(5)
+questionHelpful(5)
 
 module.exports.findQuestions = findQuestions;
 module.exports.findQuestions = findAnswers;

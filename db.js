@@ -77,6 +77,7 @@ where q.id = ${id}
       var obj = res.rows[0].results.results
       var productId = id
       console.log('questions', { productId, obj })
+      pool.end()
     })
 }
 
@@ -115,6 +116,7 @@ left join (
       var obj = res.rows[0].results.results
       var question = id
       console.log('answers', { question, obj })
+      pool.end()
     })
 }
 // findQuestions(5)
@@ -125,6 +127,7 @@ function addQuestion(body, name, email, productId) {
   values('${body}', '${Date.now()}', '${name}', '${email}', '${productId}', '0', '0')`)
   .then((res) => {
     console.log('question added successfully')
+    pool.end()
   })
 }
 
@@ -140,10 +143,14 @@ function addAnswer(qId, body, name, email, photos) {
   })
   .then(() => {
     console.log('answer added successfully')
+    pool.end()
   })
 }
 
-addAnswer(1, 'test', 'test', 'test@gmail.com', ['test.com', 'test.com'])
+// addAnswer(1, 'test', 'test', 'test@gmail.com', ['test.com', 'test.com'])
 
 
 module.exports.findQuestions = findQuestions;
+module.exports.findQuestions = findAnswers;
+module.exports.findQuestions = addAnswer;
+module.exports.findQuestions = addQuestion;

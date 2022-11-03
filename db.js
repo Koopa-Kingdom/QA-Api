@@ -122,13 +122,28 @@ left join (
 // id,product_id,body,date_written,asker_name,asker_email,reported,helpful
 function addQuestion(body, name, email, productId) {
   pool.query(`insert into questions(question_body, date_written, asker_name, asker_email, product_id, reported, question_helpfulness)
-  values('${body}', '${Date.now()}', '${name}', '${email}', '${productId}', '${0}', '${0}')`)
+  values('${body}', '${Date.now()}', '${name}', '${email}', '${productId}', '0', '0')`)
   .then((res) => {
     console.log('question added successfully')
   })
 }
 
-addQuestion('test', 'test', 'test@gmail.com', 1)
+// addQuestion('test', 'test', 'test@gmail.com', 1)
+
+function addAnswer(qId, body, name, email, photos) {
+  pool.query(`insert into answers(question_id, answer_body, date_written, answerer_name, answerer_email, reported, helpfulness) values ('${qId}', '${body}', '${Date.now()}', '${name}', '${email}', '0', '0') RETURNING id`)
+  .then((res) => {
+    photos.forEach((url) => {
+      console.log(url)
+      pool.query(`insert into answers_photos(answer_id, url) values ('${res.rows[0].id}', '${url}')`)
+    })
+  })
+  .then(() => {
+    console.log('answer added successfully')
+  })
+}
+
+addAnswer(1, 'test', 'test', 'test@gmail.com', ['test.com', 'test.com'])
 
 
 module.exports.findQuestions = findQuestions;

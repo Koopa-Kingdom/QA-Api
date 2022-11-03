@@ -23,8 +23,8 @@ const pool = new Pool({
 // ON ap.answer_id = az.id
 // GROUP BY az.id
 // ORDER BY az.question_id
-var product = 5
-pool.query(`select
+function findQuestions(id) {
+  pool.query(`select
 json_build_object(
   'results', json_agg(
     json_build_object(
@@ -71,10 +71,54 @@ from answers a
   ) ap on a.id = ap.answer_id
   group by question_id
 ) a on q.id = a.question_id
-where q.id = ${product}
+where q.id = ${id}
 `)
-.then((res) => {
-  var obj = res.rows[0].results.results
-  var productId = product
-  console.log('all questions for product', {productId, obj})
-})
+    .then((res) => {
+      var obj = res.rows[0].results.results
+      var productId = id
+      console.log('questions', { productId, obj })
+    })
+}
+
+
+function findAnswers(id) {
+  pool.query(`select
+  json_build_object(
+    'results', json_agg(
+      json_build_object(
+        'id', a.id,
+        'body', a.answer_body,
+        'date', a.date_written,
+        'answerer_name', a.answerer_name,
+        'answerer_email', a.answerer_email,
+        'reported', a.reported,
+        'helpfulness', a.helpfulness,
+        'photos', photo
+        )
+        )
+  ) results
+from answers a
+left join (
+      select
+        answer_id,
+        json_agg(
+          json_build_object(
+            'id', ap.id,
+            'url', ap.url
+          )
+        ) photo
+      from answers_photos ap
+      group by 1
+    ) ap on a.id = ap.answer_id
+    where a.question_id = ${id}`)
+    .then((res) => {
+      var obj = res.rows[0].results.results
+      var question = id
+      console.log('answers', { question, obj })
+    })
+}
+findQuestions(5)
+findAnswers(5)
+
+
+module.exports.findQuestions = findQuestions;

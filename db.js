@@ -9,14 +9,6 @@ const pool = new Pool({
   port: process.env.PORT
 })
 
-
-
-// pool.query(`select az.*, json_agg(ap.url)  from answers az left join answers_photos ap on ap.answer_id = az.id
-// where az.id = 5 group by az.id;`)
-// .then((res) => {
-//   console.log(res.rows)
-// })
-
 // -------------- gets questions w array of answers -------------------------
 // SELECT q.*, json_agg(a.*) as answers
 // FROM questions q
@@ -31,8 +23,8 @@ const pool = new Pool({
 // ON ap.answer_id = az.id
 // GROUP BY az.id
 // ORDER BY az.question_id
-
-pool.query(`	select
+var product = 5
+pool.query(`select
 json_build_object(
   'results', json_agg(
     json_build_object(
@@ -51,6 +43,8 @@ from questions q
 left join (
 select
   question_id,
+  json_object_agg(
+    a.id,
     json_build_object(
       'id', a.id,
       'body', a.answer_body,
@@ -60,9 +54,9 @@ select
       'reported', a.reported,
       'helpfulness', a.helpfulness,
       'photos', photo
+      )
       ) answer
-from
-  answers a
+from answers a
   left join (
     select
       answer_id,
@@ -75,11 +69,12 @@ from
     from answers_photos ap
     group by 1
   ) ap on a.id = ap.answer_id
+  group by question_id
 ) a on q.id = a.question_id
-where q.product_id = 5
+where q.id = ${product}
 `)
 .then((res) => {
-  console.log('all questions for product', res.rows[0].results.results)
-  console.log('all answers for question', res.rows[0].results.results[1].answers)
-  console.log('all all photos for answer', res.rows[0].results.results[1].answers.photos)
+  var obj = res.rows[0].results.results
+  var productId = product
+  console.log('all questions for product', {productId, obj})
 })

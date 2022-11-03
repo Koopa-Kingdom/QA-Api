@@ -122,54 +122,54 @@ left join (
 function addQuestion(body, name, email, productId) {
   pool.query(`insert into questions(question_body, date_written, asker_name, asker_email, product_id, reported, question_helpfulness)
   values('${body}', '${Date.now()}', '${name}', '${email}', '${productId}', '0', '0') RETURNING id`)
-  .then((res) => {
-    console.log('question added successfully', res.rows[0].id)
-    pool.end()
-  })
+    .then((res) => {
+      console.log('question added successfully', res.rows[0].id)
+      pool.end()
+    })
 }
 
 function addAnswer(qId, body, name, email, photos) {
   pool.query(`insert into answers(question_id, answer_body, date_written, answerer_name, answerer_email, reported, helpfulness) values ('${qId}', '${body}', '${Date.now()}', '${name}', '${email}', '0', '0') RETURNING id`)
-  .then((res) => {
-    photos.forEach((url) => {
-      pool.query(`insert into answers_photos(answer_id, url) values ('${res.rows[0].id}', '${url}')`)
+    .then((res) => {
+      photos.forEach((url) => {
+        pool.query(`insert into answers_photos(answer_id, url) values ('${res.rows[0].id}', '${url}')`)
+      })
     })
-  })
-  .then((res) => {
-    console.log('answer added successfully')
-    pool.end()
-  })
+    .then((res) => {
+      console.log('answer added successfully')
+      pool.end()
+    })
 
 }
 
 function questionReport(qId) {
   pool.query(`UPDATE questions set reported = 1 where questions.id = ${qId} returning id`)
-  .then((res) => {
-    console.log(`question ${res.rows[0].id} reported successfully` )
-    pool.end()
-  })
+    .then((res) => {
+      console.log(`question ${res.rows[0].id} reported successfully`)
+      pool.end()
+    })
 }
 function questionHelpful(qId) {
   pool.query(`UPDATE questions set question_helpfulness = question_helpfulness + 1 where questions.id = ${qId} returning id`)
-  .then((res) => {
-    console.log(`question ${res.rows[0].id} helpfulness added` )
-    pool.end()
-  })
+    .then((res) => {
+      console.log(`question ${res.rows[0].id} helpfulness added`)
+      pool.end()
+    })
 }
 
 function answerReport(aId) {
   pool.query(`UPDATE answers set reported = 1 where answers.id = ${aId} returning id`)
-  .then((res) => {
-    console.log(`answer ${res.rows[0].id} reported successfully` )
-    pool.end()
-  })
+    .then((res) => {
+      console.log(`answer ${res.rows[0].id} reported successfully`)
+      pool.end()
+    })
 }
 function answerHelpful(aId) {
   pool.query(`UPDATE answers set helpfulness = helpfulness + 1 where answers.id = ${aId} returning id`)
-  .then((res) => {
-    console.log(`answer ${res.rows[0].id} helpfulness added` )
-    pool.end()
-  })
+    .then((res) => {
+      console.log(`answer ${res.rows[0].id} helpfulness added`)
+      pool.end()
+    })
 }
 
 // addAnswer(3518967, 'test', 'test', 'test@gmail.com', ['test.com', 'test.com'])

@@ -74,9 +74,9 @@ from answers a
 where q.id = ${id}
 `)
     .then((res) => {
-      var obj = res.rows[0].results.results
+      var results = res.rows[0].results.results
       var productId = id
-      console.log('questions', { productId, obj })
+      console.log('questions', { productId, results })
       pool.end()
     })
 }
@@ -113,38 +113,33 @@ left join (
     ) ap on a.id = ap.answer_id
     where a.question_id = ${id}`)
     .then((res) => {
-      var obj = res.rows[0].results.results
+      var results = res.rows[0].results.results
       var question = id
-      console.log('answers', { question, obj })
+      console.log('answers', { question, results })
       pool.end()
     })
 }
-// findQuestions(5)
-// findAnswers(5)
-// id,product_id,body,date_written,asker_name,asker_email,reported,helpful
-function addQuestion({body, name, email, productId}) {
+function addQuestion(body, name, email, productId) {
   pool.query(`insert into questions(question_body, date_written, asker_name, asker_email, product_id, reported, question_helpfulness)
-  values('${body}', '${Date.now()}', '${name}', '${email}', '${productId}', '0', '0')`)
+  values('${body}', '${Date.now()}', '${name}', '${email}', '${productId}', '0', '0') RETURNING id`)
   .then((res) => {
-    console.log('question added successfully')
+    console.log('question added successfully', res.rows[0].id)
     pool.end()
   })
 }
 
-// addQuestion('test', 'test', 'test@gmail.com', 1)
-
-function addAnswer({qId, body, name, email, photos}) {
+function addAnswer(qId, body, name, email, photos) {
   pool.query(`insert into answers(question_id, answer_body, date_written, answerer_name, answerer_email, reported, helpfulness) values ('${qId}', '${body}', '${Date.now()}', '${name}', '${email}', '0', '0') RETURNING id`)
   .then((res) => {
     photos.forEach((url) => {
-      console.log(url)
       pool.query(`insert into answers_photos(answer_id, url) values ('${res.rows[0].id}', '${url}')`)
     })
   })
-  .then(() => {
+  .then((res) => {
     console.log('answer added successfully')
     pool.end()
   })
+
 }
 
 function questionReport(qId) {
@@ -169,7 +164,7 @@ function answerReport(aId) {
     pool.end()
   })
 }
-function questionHelpful(aId) {
+function answerHelpful(aId) {
   pool.query(`UPDATE answers set helpfulness = helpfulness + 1 where answers.id = ${aId} returning id`)
   .then((res) => {
     console.log(`answer ${res.rows[0].id} helpfulness added` )
@@ -177,11 +172,13 @@ function questionHelpful(aId) {
   })
 }
 
-// addAnswer(1, 'test', 'test', 'test@gmail.com', ['test.com', 'test.com'])
-questionReport(5)
-questionHelpful(5)
-answerReport(5)
-questionHelpful(5)
+// addAnswer(3518967, 'test', 'test', 'test@gmail.com', ['test.com', 'test.com'])
+// questionReport(3518967)
+// questionHelpful(3518967)
+// answerReport(5)
+// answerHelpful(6879316)
+// findQuestions(423423)
+findAnswers(23)
 
 module.exports.findQuestions = findQuestions;
 module.exports.findQuestions = findAnswers;

@@ -181,6 +181,10 @@ function answerHelpful(aId) {
 findAnswers(23)
 
 module.exports.findQuestions = findQuestions;
-module.exports.findQuestions = findAnswers;
-module.exports.findQuestions = addAnswer;
-module.exports.findQuestions = addQuestion;
+module.exports.findAnswers = findAnswers;
+module.exports.addAnswer = addAnswer;
+module.exports.addQuestion = addQuestion;
+module.exports.answerHelpful = answerHelpful;
+module.exports.questionHelpful = questionHelpful;
+module.exports.answerReport = answerReport;
+module.exports.questionReport = questionReport;

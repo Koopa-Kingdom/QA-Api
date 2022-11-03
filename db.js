@@ -117,8 +117,18 @@ left join (
       console.log('answers', { question, obj })
     })
 }
-findQuestions(5)
-findAnswers(5)
+// findQuestions(5)
+// findAnswers(5)
+// id,product_id,body,date_written,asker_name,asker_email,reported,helpful
+function addQuestion(body, name, email, productId) {
+  pool.query(`insert into questions(question_body, date_written, asker_name, asker_email, product_id, reported, question_helpfulness)
+  values('${body}', '${Date.now()}', '${name}', '${email}', '${productId}', '${0}', '${0}')`)
+  .then((res) => {
+    console.log('question added successfully')
+  })
+}
+
+addQuestion('test', 'test', 'test@gmail.com', 1)
 
 
 module.exports.findQuestions = findQuestions;

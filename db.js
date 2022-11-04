@@ -1,6 +1,6 @@
 const path = require("dotenv")
 const { Pool, client } = require('pg')
-const PORT =  3000;
+const PORT = 3000;
 const express = require("express");
 
 const app = express();
@@ -16,7 +16,7 @@ const pool = new Pool({
   port: process.env.PORT
 })
 
-app.get('/qa/question?:product_id', (req, res) => {
+app.get('/qa/questions?:product_id', (req, res) => {
   pool.query(`select
 json_build_object(
   'results', json_agg(
@@ -69,13 +69,12 @@ where q.product_id = ${req.query.product_id}
     .then((data) => {
       var results = data.rows[0].results.results
       var productId = req.query.product_id
-      console.log({ productId, results })
       res.end(JSON.stringify({ productId, results }))
-      pool.end()
     })
 })
 
-function findAnswers(id) {
+app.get('/qa/questions/:question_id/answers', (req, res) => {
+
   pool.query(`select
   json_build_object(
     'results', json_agg(
@@ -104,85 +103,65 @@ left join (
       from answers_photos ap
       group by 1
     ) ap on a.id = ap.answer_id
-    where a.question_id = ${id}`)
+    where a.question_id = ${req.params.question_id}`)
     .then((data) => {
       var results = data.rows[0].results
-      var question = id
-      console.log('answers', { question, results })
-      pool.end()
+      var question = req.params.question_id
+      res.end(JSON.stringify({ question, results }))
     })
-}
+})
 
-function addQuestion(body, name, email, productId) {
+app.post('/qa/questions/', (req, res) => {
   pool.query(`insert into questions(question_body, date_written, asker_name, asker_email, product_id, reported, question_helpfulness)
-  values('${body}', '${Date.now()}', '${name}', '${email}', '${productId}', '0', '0') RETURNING id`)
+    values('${req.body.body}', '${Date.now()}', '${req.body.name}', '${req.body.email}', '${req.body.product_id}', '0', '0') RETURNING id`)
     .then((data) => {
-      console.log('question added successfully', data.rows[0].id)
-      pool.end()
+      res.end('question created successfully')
     })
-}
+})
 
-function addAnswer(qId, body, name, email, photos) {
-  pool.query(`insert into answers(question_id, answer_body, date_written, answerer_name, answerer_email, reported, helpfulness) values ('${qId}', '${body}', '${Date.now()}', '${name}', '${email}', '0', '0') RETURNING id`)
+
+app.post('/qa/questions/:question_id/answers', (req, res) => {
+  pool.query(`insert into answers(question_id, answer_body, date_written, answerer_name, answerer_email, reported, helpfulness) values ('${req.params.question_id}', '${req.body.body}', '${Date.now()}', '${req.body.name}', '${req.body.email}', '0', '0') RETURNING id`)
     .then((data) => {
-      photos.forEach((url) => {
+      req.body.photos.forEach((url) => {
         pool.query(`insert into answers_photos(answer_id, url) values ('${data.rows[0].id}', '${url}')`)
       })
     })
     .then((data) => {
-      console.log('answer added successfully')
-      pool.end()
+      res.end('answer added successfully')
     })
-}
+})
 
-function questionReport(qId) {
-  pool.query(`UPDATE questions set reported = 1 where questions.id = ${qId} returning id`)
+app.put('/qa/questions/:question_id/report', (req, res) => {
+  pool.query(`UPDATE questions set reported = 1 where questions.id = ${req.params.question_id} returning id`)
     .then((data) => {
-      console.log(`question ${data.rows[0].id} reported successfully`)
-      pool.end()
+      res.end(`question ${data.rows[0].id} reported successfully`)
     })
-}
+})
 
-function questionHelpful(qId) {
-  pool.query(`UPDATE questions set question_helpfulness = question_helpfulness + 1 where questions.id = ${qId} returning id`)
+app.put('/qa/questions/:question_id/helpful', (req, res) => {
+
+  pool.query(`UPDATE questions set question_helpfulness = question_helpfulness + 1 where questions.id = ${req.params.question_id} returning id`)
     .then((data) => {
-      console.log(`question ${data.rows[0].id} helpfulness added`)
-      pool.end()
+      res.end(`question ${data.rows[0].id} helpfulness added`)
     })
-}
+})
 
-function answerReport(aId) {
-  pool.query(`UPDATE answers set reported = 1 where answers.id = ${aId} returning id`)
+app.put('/qa/answers/:answer_id/report', (req, res) => {
+
+  pool.query(`UPDATE answers set reported = 1 where answers.id = ${req.params.answer_id} returning id`)
     .then((data) => {
-      console.log(`answer ${data.rows[0].id} reported successfully`)
-      pool.end()
+      res.end(`answer ${data.rows[0].id} reported successfully`)
     })
-}
+})
 
-function answerHelpful(aId) {
-  pool.query(`UPDATE answers set helpfulness = helpfulness + 1 where answers.id = ${aId} returning id`)
+app.put('/qa/answers/:answer_id/helpful', (req, res) => {
+
+  pool.query(`UPDATE answers set helpfulness = helpfulness + 1 where answers.id = ${req.params.answer_id} returning id`)
     .then((data) => {
-      console.log(`answer ${data.rows[0].id} helpfulness added`)
-      pool.end()
+      res.end(`answer ${data.rows[0].id} helpfulness added`)
     })
-}
-
-// addAnswer(3518967, 'test', 'test', 'test@gmail.com', ['test.com', 'test.com'])
-// questionReport(3518967)
-// questionHelpful(3518967)
-// answerReport(5)
-// answerHelpful(6879316)
-// findQuestions(1)
-// findAnswers(23)
+})
 
 app.listen(PORT);
 console.log(`Server listening at ${PORT}`);
-
-// module.exports.findQuestions = findQuestions;
-// module.exports.findAnswers = findAnswers;
-// module.exports.addAnswer = addAnswer;
-// module.exports.addQuestion = addQuestion;
-// module.exports.answerHelpful = answerHelpful;
-// module.exports.questionHelpful = questionHelpful;
-// module.exports.answerReport = answerReport;
-// module.exports.questionReport = questionReport;

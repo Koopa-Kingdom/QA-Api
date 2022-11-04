@@ -19,7 +19,9 @@ const pool = new Pool({
 app.get('/qa/questions?:product_id', (req, res) => {
   pool.query(`select
 json_build_object(
-  'results', json_agg(
+  'product_id', ${req.query.product_id},
+  'results',
+  (select json_agg(
     json_build_object(
       'question_id', q.id,
       'question_body', q.question_body,
@@ -28,17 +30,41 @@ json_build_object(
       'asker_email', q.asker_email,
       'reported', q.reported,
       'question_helpfulness', q.question_helpfulness,
-      'answers', answer
-    )
-  )
-) results
-from questions q
-left join (
-select
-  question_id,
-  json_object_agg(
+      'answers', (select
+        json_object_agg(
+        a.id,
+        (select json_build_object(
+          'id', a.id,
+          'body', a.answer_body,
+          'date', a.date_written,
+          'answerer_name', a.answerer_name,
+          'answerer_email', a.answerer_email,
+          'reported', a.reported,
+          'helpfulness', a.helpfulness,
+          'photos', (select json_agg(
+            json_build_object(
+              'id', ap.id,
+              'url', ap.url
+            )
+          ) from answers_photos ap where ap.answer_id = a.id)
+          )
+          )
+          ) from answers a where a.question_id = q.id)
+        )
+    )from questions q where product_id = ${req.query.product_id})
+  )`)
+    .then((data) => {
+      var results = data.rows[0].json_build_object
+      res.end(JSON.stringify(results))
+    })
+})
+
+app.get('/qa/questions/:question_id/answers', (req, res) => {
+
+  pool.query(`(select
+    json_object_agg(
     a.id,
-    json_build_object(
+    (select json_build_object(
       'id', a.id,
       'body', a.answer_body,
       'date', a.date_written,
@@ -46,68 +72,20 @@ select
       'answerer_email', a.answerer_email,
       'reported', a.reported,
       'helpfulness', a.helpfulness,
-      'photos', photo
-      )
-      ) answer
-from answers a
-  left join (
-    select
-      answer_id,
-      json_agg(
+      'photos', (select json_agg(
         json_build_object(
           'id', ap.id,
           'url', ap.url
         )
-      ) photo
-    from answers_photos ap
-    group by 1
-  ) ap on a.id = ap.answer_id
-  group by question_id
-) a on q.id = a.question_id
-where q.product_id = ${req.query.product_id}
-`)
+      ) from answers_photos ap where ap.answer_id = a.id)
+      )
+      )
+      ) from answers a where a.question_id = ${req.params.question_id})`)
     .then((data) => {
-      var results = data.rows[0].results.results
-      var productId = req.query.product_id
-      res.end(JSON.stringify({ productId, results }))
-    })
-})
-
-app.get('/qa/questions/:question_id/answers', (req, res) => {
-
-  pool.query(`select
-  json_build_object(
-    'results', json_agg(
-      json_build_object(
-        'answer_id', a.id,
-        'body', a.answer_body,
-        'date', a.date_written,
-        'answerer_name', a.answerer_name,
-        'answerer_email', a.answerer_email,
-        'reported', a.reported,
-        'helpfulness', a.helpfulness,
-        'photos', photo
-        )
-        )
-  ) results
-from answers a
-left join (
-      select
-        answer_id,
-        json_agg(
-          json_build_object(
-            'id', ap.id,
-            'url', ap.url
-          )
-        ) photo
-      from answers_photos ap
-      group by 1
-    ) ap on a.id = ap.answer_id
-    where a.question_id = ${req.params.question_id}`)
-    .then((data) => {
-      var results = data.rows[0].results
-      var question = req.params.question_id
-      res.end(JSON.stringify({ question, results }))
+      console.log(data.rows[0])
+      var results = data.rows[0]
+      // var question = req.params.question_id
+      res.end(JSON.stringify(results))
     })
 })
 

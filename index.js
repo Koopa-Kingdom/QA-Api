@@ -1,13 +1,15 @@
+const PORT =  3000;
+const express = require("express");
+
+const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 
 
-
-app.get('qa/questions/', (req, res) => {
-  findQuestions(res.data.id)
-  .then((data) => {
-    res.writeHead(200, headers)
-    res.end(data)
-  })
+app.get('/qa/question?:product_id', (req, res) => {
+  req.query.product_id
 })
 
 app.get('qa/answers', (req, res) => {
@@ -35,3 +37,7 @@ app.post('qa/questions/', (req, res) => {
     res.end(data)
   })
 })
+
+
+app.listen(PORT);
+console.log(`Server listening at ${PORT}`);

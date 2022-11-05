@@ -106,9 +106,11 @@ app.post('/qa/questions/', (req, res) => {
 app.post('/qa/questions/:question_id/answers', (req, res) => {
   pool.query(`insert into answers(question_id, answer_body, date_written, answerer_name, answerer_email, reported, helpfulness) values ('${req.params.question_id}', '${req.body.body}', '${Date.now()}', '${req.body.name}', '${req.body.email}', '0', '0') RETURNING id`)
     .then((data) => {
-      req.body.photos.forEach((url) => {
-        pool.query(`insert into answers_photos(answer_id, url) values ('${data.rows[0].id}', '${url}')`)
-      })
+      if (req.body.photos) {
+        req.body.photos.forEach((url) => {
+          pool.query(`insert into answers_photos(answer_id, url) values ('${data.rows[0].id}', '${url}')`)
+        })
+      }
     })
     .then((data) => {
       res.end('answer added successfully')

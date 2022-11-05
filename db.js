@@ -1,19 +1,24 @@
-const path = require("dotenv")
+// const path = require("dotenv")
+// require('dotenv').config()
+const path = require('path');
+require('dotenv').config({ path:
+path.join(__dirname, '.env') });
 const { Pool, client } = require('pg')
 const PORT = 3000;
 const express = require("express");
 
 const app = express();
+console.log(process.env.PGUSER)
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const pool = new Pool({
-  user: process.env.USER,
-  host: process.env.HOST,
-  database: process.env.DATABASE,
-  password: process.env.PASSWORD,
-  port: process.env.PORT
+  user: process.env.PGUSER,
+  host: process.env.PGHOST,
+  database: process.env.PGDATABASE,
+  password: process.env.PGPASSWORD,
+  port: process.env.PGPORT
 })
 
 app.get('/qa/questions?:product_id', (req, res) => {

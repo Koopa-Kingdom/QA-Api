@@ -21,6 +21,26 @@ const pool = new Pool({
   port: process.env.PGPORT
 })
 
+var fileName = process.env.fileName;
+
+app.use(`/${fileName}`, function(req, res, next){
+
+  var options = {
+      root: path.join(__dirname)
+  };
+
+  res.sendFile(fileName, options, function (err) {
+      if (err) {
+          next(err);
+      } else {
+          console.log('Sent:', fileName);
+          next();
+      }
+  });
+});
+
+
+
 app.get('/qa/questions?:product_id', (req, res) => {
   pool.query(`select
 json_build_object(

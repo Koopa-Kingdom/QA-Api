@@ -1,8 +1,10 @@
 // const path = require("dotenv")
 // require('dotenv').config()
 const path = require('path');
-require('dotenv').config({ path:
-path.join(__dirname, '.env') });
+require('dotenv').config({
+  path:
+    path.join(__dirname, '.env')
+});
 const { Pool, client } = require('pg')
 const PORT = 3000;
 const express = require("express");
@@ -23,19 +25,19 @@ const pool = new Pool({
 
 var fileName = process.env.fileName;
 
-app.use(`/${fileName}`, function(req, res, next){
+app.use(`/${fileName}`, function (req, res, next) {
 
   var options = {
-      root: path.join(__dirname)
+    root: path.join(__dirname)
   };
 
   res.sendFile(fileName, options, function (err) {
-      if (err) {
-          next(err);
-      } else {
-          console.log('Sent:', fileName);
-          next();
-      }
+    if (err) {
+      next(err);
+    } else {
+      console.log('Sent:', fileName);
+      next();
+    }
   });
 });
 
@@ -107,9 +109,7 @@ app.get('/qa/questions/:question_id/answers', (req, res) => {
       )
       ) from answers a where a.question_id = ${req.params.question_id})`)
     .then((data) => {
-      console.log(data.rows[0])
       var results = data.rows[0]
-      // var question = req.params.question_id
       res.end(JSON.stringify(results))
     })
 })

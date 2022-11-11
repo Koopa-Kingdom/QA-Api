@@ -9,7 +9,6 @@ const express = require("express");
 
 const app = express();
 
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -24,7 +23,6 @@ const pool = new Pool({
 var fileName = process.env.fileName;
 
 app.use(`/${fileName}`, function (req, res, next) {
-
   var options = {
     root: path.join(__dirname)
   };
